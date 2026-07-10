@@ -104,8 +104,23 @@ for each batch (images, labels):
 
 ---
 
+## 결정 로그
+
+- **계산 환경**: GPU 없음 (맥북/노트북 CPU). → 저해상도·소형 데이터셋으로 시작.
+- **첫 데이터 소스**: **CIFAKE** (Kaggle / Hugging Face).
+  - 진짜 = CIFAR-10 실제 사진 6만, 가짜 = Stable Diffusion 1.4 생성 6만. 전부 **32×32**, balanced.
+  - `train/{REAL,FAKE}`, `test/{REAL,FAKE}` 구조로 이미 분할·라벨링됨.
+  - 장점: CPU에서 학습 가능, 해상도 편향 통제됨.
+  - 한계: 생성기가 SD 1.4 하나뿐(→ 2단계 일반화 때 GenImage 등으로 확장), 32×32라 주파수 아티팩트 거의 없음.
+
+## 1단계 실행 체크리스트 (데이터)
+
+- [ ] CIFAKE 다운로드 (Kaggle 또는 HF)
+- [ ] `data/raw/` 아래 배치, 폴더 구조 확인
+- [ ] 눈으로 검증: 클래스별 장수 세기, 샘플 열어보기, 크기·포맷 일관성 확인
+- [ ] val 분할 계획 세우기 (train 일부를 떼서 validation, test는 끝까지 미사용)
+
 ## 다음에 정할 것 (논의 TODO)
 
-- [ ] **데이터 소스**: 어떤 공개 데이터셋으로 사람/AI 이미지를 모을지
-- [ ] **첫 백본**: ResNet18(가볍게) vs ResNet50
+- [ ] **첫 백본**: ResNet18(가볍게) vs ResNet50 — CPU라 더 가벼운 쪽 유력
 - [ ] 0단계 개념(Tensor shape, autograd, BCE) 자가진단 완료 여부
