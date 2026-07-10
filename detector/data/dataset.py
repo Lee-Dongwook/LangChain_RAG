@@ -1,11 +1,10 @@
-from logging import root
 import os
 from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
 class CifakeDataset(Dataset):
-    def __init__(self, roo: str, transform=None):
+    def __init__(self, root: str, transform=None):
         self.root = root
         self.transform = transform
 
