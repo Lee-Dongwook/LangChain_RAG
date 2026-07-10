@@ -12,9 +12,20 @@ import subprocess
 import sys
 
 REPO = "git+https://github.com/Lee-Dongwook/LangChain_RAG.git@main"
+TORCH_INDEX = "https://download.pytorch.org/whl/cu121"
 
 
 def install_detector():
+    # ① torch/torchvision을 GPU 아키텍처에 맞는 CUDA 빌드로 강제 재설치.
+    #    (Kaggle 기본 torch가 배정된 GPU를 지원 안 해 "no kernel image" 에러가 나서)
+    #    --force-reinstall 없으면 "이미 설치됨"으로 pip가 건너뛰어 안 고쳐짐.
+    #    반드시 torch를 import하기 전에 실행되어야 함.
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "--force-reinstall",
+         "torch", "torchvision", "--index-url", TORCH_INDEX],
+        check=True,
+    )
+    # ② 우리 detector 패키지 설치 (의존성 없음 → torch 안 건드림)
     subprocess.run(
         [sys.executable, "-m", "pip", "install", "-q", REPO],
         check=True,
