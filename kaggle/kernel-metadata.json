@@ -1,0 +1,13 @@
+{
+  "id": "leedongwook0713/cifake-detector-train",
+  "title": "cifake-detector-train",
+  "code_file": "kernel_entry.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["birdy654/cifake-real-and-ai-generated-synthetic-images"],
+  "competition_sources": [],
+  "kernel_sources": []
+}

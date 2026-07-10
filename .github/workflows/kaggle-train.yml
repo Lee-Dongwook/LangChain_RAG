@@ -1,0 +1,41 @@
+name: Kaggle Train
+
+# 수동 실행(버튼) + 학습 관련 코드가 main에 push될 때 자동 실행.
+# 문서/기타 파일만 바뀌면 GPU 낭비 않도록 paths로 제한.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "detector/**"
+      - "kaggle/**"
+      - "pyproject.toml"
+      - ".github/workflows/kaggle-train.yml"
+
+jobs:
+  submit-kaggle-kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Kaggle CLI
+        run: pip install --quiet kaggle
+
+      - name: Push & run Kaggle kernel
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          # kaggle/kernel-metadata.json + kernel_entry.py 를 올리면 Kaggle이 GPU로 실행 시작
+          kaggle kernels push -p kaggle
+          echo "----- 현재 상태 -----"
+          kaggle kernels status leedongwook0713/cifake-detector-train || true
+          echo ""
+          echo "진행/로그: https://www.kaggle.com/code/leedongwook0713/cifake-detector-train"
+          echo "결과 회수(로컬): kaggle kernels output leedongwook0713/cifake-detector-train -p ./out"
