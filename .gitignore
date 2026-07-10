@@ -48,6 +48,7 @@ secrets.toml
 
 # Data / datasets (커밋 금지)
 data/
+!detector/data/
 *.pkl
 
 # Model checkpoints & experiment outputs
