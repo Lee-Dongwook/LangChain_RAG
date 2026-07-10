@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 
 from detector.data import build_loaders
-from detector.models.simple_cnn import SimpleCNN
+from detector.models.resnet_finetune import build_resnet18
+from detector.transform import get_train_transform_resnet, get_eval_transform_resnet
 from detector.training.loop import train_one_epoch, evaluate
 
 
@@ -16,15 +17,23 @@ def main():
         device = torch.device("cpu")
     print(f"device: {device}")
 
-    train_loader, val_loader = build_loaders(root="data/raw/train", batch_size=64)
+    train_loader, val_loader = build_loaders(
+        root="data/raw/train",
+        train_transform=get_train_transform_resnet(),
+        eval_transform=get_eval_transform_resnet(),
+        batch_size=64,
+    )
 
-    model = SimpleCNN(num_classes=2).to(device)
+    model = build_resnet18(num_classes=2, pretrained=True, freeze_backbone=True).to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()),  # 얼린 백본 제외, fc만 학습
+        lr=1e-3,
+    )
 
     os.makedirs("experiments", exist_ok=True)
     best_val_acc = 0.0
-    epochs = 5
+    epochs = 3
 
     for epoch in range(1, epochs + 1):
         tr_loss, tr_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)

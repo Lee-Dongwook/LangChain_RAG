@@ -26,3 +26,27 @@ def get_eval_transform():
             std=[0.2023, 0.1994, 0.2010]
         )
     ])
+
+def get_train_transform_resnet():
+    return transforms.Compose([
+        transforms.Resize((128,128)),
+        transforms.RandomHorizontalFlip(0.5),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225],
+        ),
+    ])
+
+def get_eval_transform_resnet():
+    return transforms.Compose([
+        transforms.Resize((128, 128)),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225],
+        ),
+    ])
+
+
+
