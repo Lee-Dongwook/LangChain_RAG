@@ -45,17 +45,23 @@ Thumbs.db
 # Secrets / API keys
 *.key
 secrets.toml
-.streamlit/secrets.toml
 
-# Data / models / vector stores
-*.pdf
-*.pptx
-chroma/
-.chroma/
-faiss_index/
-*.faiss
+# Data / datasets (커밋 금지)
+data/
 *.pkl
-db/
+
+# Model checkpoints & experiment outputs
+experiments/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Experiment tracking
+wandb/
+runs/
+lightning_logs/
 
 # Logs
 *.log
