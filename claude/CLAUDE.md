@@ -53,21 +53,25 @@ Claude가 **안 하는 것**:
 
 아직 대부분 비어있다. 개발자가 코드를 채워 넣을 때 아래 구조를 따르는 것을 권장한다.
 
+**설계 원칙:** 서비스화(추후)를 대비해 **재사용되는 코어(`detector/`)를 분리**한다. 서비스가 실제로 쓰는 경로 = `모델 정의 + 전처리 + 추론`. 이 셋은 학습·추론이 **같은 정의를 import** 해야 train/serve skew(학습·서비스 전처리 불일치)를 막는다. 자세한 근거는 [docs/02-project-structure.md] 참고.
+
 ```
-data/                 # 데이터셋 (gitignore — 커밋 금지)
-  raw/                # 원본 다운로드
-  processed/          # 전처리 산출물
-src/
-  data/               # Dataset, DataLoader, transform 정의
+detector/             # ★재사용 코어 패키지 (서비스가 import할 부분)
+  __init__.py
   models/             # 모델 아키텍처 (백본 래핑 + 커스텀 헤드/모듈)
-  training/           # 학습 루프, 손실, 옵티마이저/스케줄러
-  eval/               # 지표, cross-generator·강건성 평가
+  transforms.py       # 전처리 정의 ★학습·추론 공유★
+  inference.py        # predict(image) -> (label, prob)  ← 서비스가 호출
+  data/               # Dataset, DataLoader (학습 전용)
+  training/           # 학습 루프, 손실, 옵티마이저/스케줄러 (학습 전용)
+  eval/               # 지표, cross-generator·강건성 평가 (학습 전용)
   utils/              # 시드 고정, 로깅, 체크포인트 IO
+scripts/              # 얇은 CLI 진입점 — detector를 호출만 함 (train.py/eval.py/predict.py)
 configs/              # 실험 설정 (yaml)
-scripts/              # train.py, eval.py, predict.py 진입점
-notebooks/            # 탐색·시각화 (재현 로직은 src로 승격)
+data/                 # 데이터셋 (gitignore — 커밋 금지); raw/ processed/
+notebooks/            # 탐색·시각화 (재현 로직은 detector로 승격)
 experiments/          # 체크포인트·로그 (gitignore)
 tests/
+# 나중에 서비스화 시 추가 (지금은 안 만듦): api/  ← detector.inference를 import만 함
 ```
 
 ## 도메인 메모 (AI vs 사람 이미지 판별에서 중요한 것)
@@ -85,10 +89,11 @@ tests/
 아래는 개발자 본인이 지키는 규칙이다. Claude는 이를 **대신 구현하지 않고**, 코드 리뷰·상기를 통해 지켜지도록 돕는다.
 
 - **재현성:** 모든 학습은 시드 고정. 실험은 `configs/`의 yaml로 하이퍼파라미터를 남기고, 하드코딩하지 않는다.
-- **직접 구현 우선:** 학습 루프·손실·지표는 라이브러리 한 줄 호출로 대체하지 말고 `src/`에 명시적으로 작성한다(학습 목적). torchvision 백본 로드는 예외.
+- **직접 구현 우선:** 학습 루프·손실·지표는 라이브러리 한 줄 호출로 대체하지 말고 `detector/`에 명시적으로 작성한다(학습 목적). torchvision 백본 로드는 예외.
+- **전처리는 한 곳에서:** transform 정의는 `detector/transforms.py`에만 두고 학습·추론이 공유한다. 복붙 두 벌 금지(train/serve skew 방지).
 - **데이터·체크포인트는 커밋하지 않는다.** `data/`, `experiments/`, `*.pt`, `*.pth`는 gitignore 대상.
 - **큰 결정은 상의:** 새 무거운 의존성 도입, 데이터셋 선택, 아키텍처 방향 전환은 진행 전에 Claude와 논의해 방향을 잡는다.
-- 노트북에서 검증된 로직은 `src/`로 승격해 재사용 가능하게 만든다.
+- 노트북에서 검증된 로직은 `detector/`로 승격해 재사용 가능하게 만든다.
 
 ## 명령어 (환경 구성 후 사용 예정 — 현재는 미구현)
 
