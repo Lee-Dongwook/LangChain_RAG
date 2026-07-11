@@ -3,6 +3,10 @@ name = "detector"
 version = "0.1.0"
 requires-python = ">=3.10"
 
+[project.optional-dependencies]
+# 웹 서빙(app/): pip install -e ".[serve]"
+serve = ["fastapi", "uvicorn", "python-multipart", "gradio", "pillow"]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
