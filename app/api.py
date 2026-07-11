@@ -15,7 +15,7 @@ from PIL import Image, UnidentifiedImageError
 
 from detector.inference import load_model, predict_pil
 
-CKPT = os.environ.get("CKPT", "experiments/kaggle_output/best.pt")
+CKPT = os.environ.get("CKPT", "models/cifake_resnet18.pt")
 
 app = FastAPI(title="CIFAKE Detector", version="0.1.0")
 

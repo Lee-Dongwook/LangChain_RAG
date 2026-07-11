@@ -12,7 +12,7 @@ from detector.inference import load_model
 def main():
     parser = argparse.ArgumentParser(description="test 세트 평가")
     parser.add_argument("--data-root", default="data/raw/test")
-    parser.add_argument("--ckpt", default="experiments/kaggle_output/best.pt")
+    parser.add_argument("--ckpt", default="models/cifake_resnet18.pt")
     parser.add_argument("--batch-size", type=int, default=64)
     args = parser.parse_args()
 

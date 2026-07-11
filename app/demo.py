@@ -12,7 +12,7 @@ import gradio as gr
 
 from detector.inference import load_model, predict_pil
 
-CKPT = os.environ.get("CKPT", "experiments/kaggle_output/best.pt")
+CKPT = os.environ.get("CKPT", "models/cifake_resnet18.pt")
 
 model, device = load_model(CKPT)
 

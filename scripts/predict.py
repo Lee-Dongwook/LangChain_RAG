@@ -19,7 +19,7 @@ def _collect(path: str):
 def main():
     parser = argparse.ArgumentParser(description="CIFAKE REAL/FAKE 판별기")
     parser.add_argument("target", help="이미지 파일 또는 이미지가 든 폴더")
-    parser.add_argument("--ckpt", default="experiments/kaggle_output/best.pt",
+    parser.add_argument("--ckpt", default="models/cifake_resnet18.pt",
                         help="체크포인트 경로 (기본: 캐글 학습 결과)")
     args = parser.parse_args()
 

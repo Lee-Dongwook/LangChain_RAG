@@ -20,6 +20,10 @@
 **핵심 교훈:** 사전학습 특징이 새 문제와 안 맞으면 **얼리지 말고 풀어서 파인튜닝**해야 한다.
 (freeze 0.87 < 밑바닥 SimpleCNN 0.94 < 전체 파인튜닝 0.97)
 
+**정식 모델:** 3번(ResNet18 전체 파인튜닝, 캐글 GPU 학습)을 `models/cifake_resnet18.pt`로 승격.
+학습에 쓰지 않은 **held-out test 2만 장 기준 accuracy 0.975** (REAL 9697/303, FAKE 9807/193).
+val 0.976 → test 0.975 로 과적합 없이 유지됨.
+
 > ⚠️ 이 점수는 **CIFAKE(= SD 1.4)** 기준. 다른 생성기(Midjourney/DALL·E)로의 일반화는 별도 평가 필요(다음 마일스톤).
 
 ## 학습 실행
@@ -31,10 +35,34 @@ python scripts/train.py
 # Kaggle GPU (헤드리스)
 #   main에 push → GitHub Actions → kaggle kernels push → GPU에서 학습
 #   결과 회수:
-kaggle kernels output leedongwook0713/cifake-detector-train -p ./out   # best.pt, metrics.json
+kaggle kernels output leedongwook0713/cifake-detector-train -p experiments/kaggle_output
+#   → best.pt를 정식 모델로 승격: models/cifake_resnet18.pt
 ```
 
 학습 로직은 `detector/training/run.py`의 `run_training()` 하나로, 로컬·Kaggle이 **경로만 바꿔 공유**한다.
+
+## 추론 · 서빙
+
+정식 모델 `models/cifake_resnet18.pt`를 불러 이미지를 판별한다. (`--ckpt` / `CKPT` 로 교체 가능)
+
+```bash
+# 단일 이미지 / 폴더 판별 (CLI)
+python scripts/predict.py 사진.png
+python scripts/predict.py 이미지폴더/
+
+# held-out test 세트 재평가 (accuracy + 혼동행렬)
+python scripts/eval.py
+
+# 웹 데모 (드래그&드롭 UI)          → http://127.0.0.1:7860
+python app/demo.py
+
+# REST API + Swagger 문서            → http://127.0.0.1:8000/docs
+uvicorn app.api:app --reload
+curl -F "file=@사진.png" http://127.0.0.1:8000/predict
+```
+
+서빙 의존성 설치: `pip install -e ".[serve]"` (fastapi·uvicorn·gradio 등).
+추론 로직은 `detector/inference.py`에 모아 학습과 동일한 모델/전처리를 재사용한다.
 
 ## 다음 마일스톤
 
