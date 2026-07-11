@@ -20,7 +20,7 @@ def pick_device():
 
 
 def run_training(data_root, out_dir="experiments", epochs=3, batch_size=64,
-                 lr=1e-4, freeze_backbone=False, seed=42):
+                 lr=1e-4, freeze_backbone=False, seed=42, max_samples=None):
     """
     로컬(M2)과 Kaggle(GPU)이 공유하는 단일 학습 진입 함수.
     경로(data_root, out_dir)만 바꿔 부르면 어디서든 동일하게 동작한다.
@@ -35,6 +35,7 @@ def run_training(data_root, out_dir="experiments", epochs=3, batch_size=64,
         train_transform=get_train_transform_resnet(),
         eval_transform=get_eval_transform_resnet(),
         batch_size=batch_size,
+        max_samples=max_samples,
     )
 
     model = build_resnet18(num_classes=2, pretrained=True,

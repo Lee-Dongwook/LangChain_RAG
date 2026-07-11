@@ -40,7 +40,24 @@ in-dist 0.975 → OOD 0.499 격차 = 현재 모델은 **"CIFAKE 전용 스페셜
 (단, 이 평가셋은 *생성기*와 *도메인*이 동시에 바뀌어 주범 분리는 안 됨.)
 
 **재현:** `python scripts/eval.py --data-root data/ood/art/Data`
-**개선 방향:** 다생성기·다도메인 혼합 재학습 + 강한 augmentation → 재평가로 격차 축소 확인.
+
+### 개선: 혼합 재학습 (진행 중)
+
+누수 방지를 위해 art를 `art_train`(80%)/`art_holdout`(20%, 학습 금지)로 분리한 뒤,
+**CIFAKE-train + art_train**을 섞어 재학습한다(멀티-루트 로더). 평가는 art_holdout으로.
+
+| 모델 | art_holdout acc | 비고 |
+|---|---|---|
+| 원본 (CIFAKE만) | 0.499 | FAKE로 붕괴 |
+| 혼합 (subset 2k·1ep, 플럼빙 검증) | **0.730** | 붕괴 풀리고 균형 회복 — 방향 실증 |
+| 혼합 (전체·GPU) | _TBD_ | Kaggle 재학습 예정 |
+
+작은 subset만으로도 붕괴가 풀림 → **학습 분포에 도메인을 섞으면 일반화가 회복**됨을 확인.
+```bash
+python scripts/split_ood.py          # art → art_train / art_holdout (seed 고정)
+python scripts/train_mixed.py --quick # 로컬 빠른 검증 (전체는 --quick 빼고 GPU 권장)
+python scripts/eval.py --ckpt experiments/mixed/best.pt --data-root data/ood/art_holdout
+```
 
 [ood-art]: https://www.kaggle.com/datasets/doctorstrange420/real-and-fake-ai-generated-art-images-dataset
 

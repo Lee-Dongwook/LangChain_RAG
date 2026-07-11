@@ -4,27 +4,30 @@ import torch
 from torch.utils.data import Dataset
 
 class CifakeDataset(Dataset):
-    def __init__(self, root: str, transform=None):
-        self.root = root
+    def __init__(self, root, transform=None):
+        # root는 단일 경로(str) 또는 여러 경로(list)를 받는다.
+        # 여러 경로를 주면 REAL/FAKE 샘플을 하나로 합쳐(혼합 학습) 로드한다.
+        self.roots = [root] if isinstance(root, str) else list(root)
         self.transform = transform
 
         self.label_map = {"REAL": 0, "FAKE": 1}
         self.samples = []
 
-        categories = sorted(os.listdir(root))
-        
-        for category in categories:
-            if category not in self.label_map:
-                continue
+        for root_dir in self.roots:
+            categories = sorted(os.listdir(root_dir))
 
-            category_dir = os.path.join(root, category)
-            label = self.label_map[category]
+            for category in categories:
+                if category not in self.label_map:
+                    continue
 
-            file_names = sorted(os.listdir(category_dir))
-            for file_name in file_names:
-                if file_name.lower().endswith(('.jpg','.jpeg','.png')):
-                    file_path = os.path.join(category_dir, file_name)
-                    self.samples.append((file_path, label))
+                category_dir = os.path.join(root_dir, category)
+                label = self.label_map[category]
+
+                file_names = sorted(os.listdir(category_dir))
+                for file_name in file_names:
+                    if file_name.lower().endswith(('.jpg','.jpeg','.png')):
+                        file_path = os.path.join(category_dir, file_name)
+                        self.samples.append((file_path, label))
 
     def __len__(self):
         return len(self.samples)
