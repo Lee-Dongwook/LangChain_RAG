@@ -7,7 +7,10 @@
   "is_private": true,
   "enable_gpu": true,
   "enable_internet": true,
-  "dataset_sources": ["birdy654/cifake-real-and-ai-generated-synthetic-images"],
+  "dataset_sources": [
+    "birdy654/cifake-real-and-ai-generated-synthetic-images",
+    "doctorstrange420/real-and-fake-ai-generated-art-images-dataset"
+  ],
   "competition_sources": [],
   "kernel_sources": []
 }

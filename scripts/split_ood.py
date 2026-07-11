@@ -1,8 +1,8 @@
-"""OOD(art) 데이터를 train / holdout 으로 결정적 분할.
+"""OOD(art) 데이터를 train / holdout 으로 결정적 분할 (로컬용 CLI).
 
-혼합 재학습의 데이터 누수를 막기 위해, art를 학습용(train)과
-절대 학습에 쓰지 않는 평가용(holdout)으로 나눈다. 원본을 복사하지 않고
-심볼릭 링크만 만들어 디스크를 아끼며, seed 고정으로 매번 동일하게 분할된다.
+혼합 재학습의 데이터 누수를 막기 위해, art를 학습용(train)과 절대 학습에
+쓰지 않는 평가용(holdout)으로 나눈다. 실제 분할 로직은 로컬·Kaggle 공용
+detector.data.ood_split 에 있어, 어디서 나눠도 결과가 동일하다.
 
 사용:
     python scripts/split_ood.py
@@ -10,18 +10,8 @@
 """
 import argparse
 import os
-import random
 
-CLASSES = ("REAL", "FAKE")
-IMG_EXTS = (".jpg", ".jpeg", ".png")
-
-
-def _link(files, dst_dir):
-    os.makedirs(dst_dir, exist_ok=True)
-    for src in files:
-        dst = os.path.join(dst_dir, os.path.basename(src))
-        if not os.path.exists(dst):
-            os.symlink(os.path.abspath(src), dst)
+from detector.data.ood_split import split_ood, materialize
 
 
 def main():
@@ -33,24 +23,13 @@ def main():
     parser.add_argument("--prefix", default="art", help="출력 폴더 접두사")
     args = parser.parse_args()
 
-    rng = random.Random(args.seed)
-    train_root = os.path.join(args.out, f"{args.prefix}_train")
-    holdout_root = os.path.join(args.out, f"{args.prefix}_holdout")
+    split = split_ood(args.src, holdout_ratio=args.holdout_ratio, seed=args.seed)
 
-    for cls in CLASSES:
-        src_dir = os.path.join(args.src, cls)
-        files = sorted(
-            os.path.join(src_dir, f) for f in os.listdir(src_dir)
-            if f.lower().endswith(IMG_EXTS)
-        )
-        rng.shuffle(files)
-        n_holdout = int(len(files) * args.holdout_ratio)
-        holdout, train = files[:n_holdout], files[n_holdout:]
+    train_root = materialize(split["train"], os.path.join(args.out, f"{args.prefix}_train"))
+    holdout_root = materialize(split["holdout"], os.path.join(args.out, f"{args.prefix}_holdout"))
 
-        _link(train, os.path.join(train_root, cls))
-        _link(holdout, os.path.join(holdout_root, cls))
-        print(f"{cls}: train {len(train)} / holdout {len(holdout)}")
-
+    for cls in split["train"]:
+        print(f"{cls}: train {len(split['train'][cls])} / holdout {len(split['holdout'][cls])}")
     print(f"\n✅ train  → {train_root}")
     print(f"✅ holdout → {holdout_root}  (학습 금지, 평가 전용)")
 

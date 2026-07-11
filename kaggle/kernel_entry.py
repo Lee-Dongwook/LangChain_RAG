@@ -32,26 +32,37 @@ def install_detector():
     )
 
 
-def find_train_dir(base="/kaggle/input"):
-    """CIFAKE 폴더 구조가 버전마다 다를 수 있어, REAL/FAKE를 가진 'train' 디렉터리를 탐색."""
+def find_dir_with_classes(base="/kaggle/input", name="train"):
+    """basename이 name이고 REAL/FAKE를 가진 디렉터리를 /kaggle/input 아래에서 탐색."""
     for root, _dirs, _files in os.walk(base):
-        if os.path.basename(root).lower() == "train":
-            entries = set(os.listdir(root))
-            if {"REAL", "FAKE"} <= entries:
+        if os.path.basename(root).lower() == name.lower():
+            if {"REAL", "FAKE"} <= set(os.listdir(root)):
                 return root
-    raise FileNotFoundError("CIFAKE train 폴더(REAL/FAKE)를 /kaggle/input 아래에서 못 찾음")
+    raise FileNotFoundError(f"REAL/FAKE를 가진 '{name}' 폴더를 /kaggle/input 아래에서 못 찾음")
 
 
 def main():
     install_detector()
 
     from detector.training.run import run_training
+    from detector.data.ood_split import split_ood, materialize
 
-    data_root = find_train_dir()
-    print("data_root:", data_root)
+    # ① CIFAKE 학습 폴더
+    cifake_train = find_dir_with_classes(name="train")
+    print("cifake_train:", cifake_train)
 
+    # ② OOD(art)를 로컬과 동일 seed로 분할 → train만 학습에 사용.
+    #    holdout은 실체화하지 않아 학습에 절대 섞이지 않는다(로컬 평가 전용).
+    art_data = find_dir_with_classes(name="Data")
+    print("art_data:", art_data)
+    art_train = materialize(
+        split_ood(art_data, holdout_ratio=0.2, seed=42)["train"],
+        "/kaggle/working/art_train",
+    )
+
+    # ③ CIFAKE-train + art_train 혼합 학습
     run_training(
-        data_root=data_root,
+        data_root=[cifake_train, art_train],
         out_dir="/kaggle/working",   # Kaggle은 여기만 결과로 저장됨
         epochs=3,
         batch_size=64,
