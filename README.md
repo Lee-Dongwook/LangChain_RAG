@@ -24,7 +24,25 @@
 학습에 쓰지 않은 **held-out test 2만 장 기준 accuracy 0.975** (REAL 9697/303, FAKE 9807/193).
 val 0.976 → test 0.975 로 과적합 없이 유지됨.
 
-> ⚠️ 이 점수는 **CIFAKE(= SD 1.4)** 기준. 다른 생성기(Midjourney/DALL·E)로의 일반화는 별도 평가 필요(다음 마일스톤).
+> ⚠️ 이 점수는 **CIFAKE(= SD 1.4)** 기준. 다른 생성기(Midjourney/DALL·E)로의 일반화는 별도 평가 필요(아래).
+
+## 일반화 평가 (out-of-distribution)
+
+학습 분포(CIFAKE = 32px CIFAR 사진 + SD 1.4) **밖**의 데이터에서 얼마나 버티는지 측정.
+
+| 평가셋 | 생성기·도메인 | 장수 | accuracy | 결과 |
+|---|---|---|---|---|
+| CIFAKE test (in-dist) | SD 1.4 · CIFAR 사진 | 20k | **0.975** | 정상 |
+| [real-vs-fake art][ood-art] (OOD) | 타 diffusion · 아트 | 21.6k | **0.499** | **붕괴** |
+
+**진단:** OOD에서 모델이 이미지의 **98.5%를 무조건 FAKE로 찍음** → 판별력 사실상 0.
+in-dist 0.975 → OOD 0.499 격차 = 현재 모델은 **"CIFAKE 전용 스페셜리스트"**이지 범용 탐지기가 아님.
+(단, 이 평가셋은 *생성기*와 *도메인*이 동시에 바뀌어 주범 분리는 안 됨.)
+
+**재현:** `python scripts/eval.py --data-root data/ood/art/Data`
+**개선 방향:** 다생성기·다도메인 혼합 재학습 + 강한 augmentation → 재평가로 격차 축소 확인.
+
+[ood-art]: https://www.kaggle.com/datasets/doctorstrange420/real-and-fake-ai-generated-art-images-dataset
 
 ## 학습 실행
 
@@ -66,6 +84,7 @@ curl -F "file=@사진.png" http://127.0.0.1:8000/predict
 
 ## 다음 마일스톤
 
-- [ ] **2단계 일반화 평가:** 학습에 안 쓴 생성기 데이터(GenImage 등)로 test → 진짜 성능 확인
+- [x] **2단계 일반화 평가:** OOD(타 생성기·아트)에서 0.499로 붕괴 확인 → 위 "일반화 평가" 참고
+- [ ] **2-1 개선:** 다생성기·다도메인 혼합 재학습으로 OOD 격차 축소
 - [ ] 3단계 강건성(JPEG 재압축·리사이즈)
 - [ ] 추후: 영상(프레임 단위)
